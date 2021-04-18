@@ -1,0 +1,6 @@
+*.elf
+*.exe
+*.o
+*.dll
+.vscode
+build_*
