@@ -66,7 +66,7 @@ int rigid_body_motion_low_level() {
     //x,y
     //vx,vy
 
-    double h = 1e-6;
+    double h = 1e-1;
 
     int rc = 0;
 
@@ -77,10 +77,10 @@ int rigid_body_motion_low_level() {
     while (t < t1 && y[1] >= -0.001) {
         printf("%.5e %.5e %.5e %.5e %.5e\n", t, y[0], y[1], y[2], y[3]);
 
-        int status = gsl_odeiv2_evolve_apply(e, c, s,
-                                             &sys,
-                                             &t, t1,
-                                             &h, y);
+        int status = gsl_odeiv2_evolve_apply_fixed_step(e, c, s,
+                                                        &sys,
+                                                        &t,  //t1,
+                                                        h, y);
         //printf("%.5f\n", h);
         if (status != GSL_SUCCESS) {
             WMQ_LOG_ERROR("gsl_odeiv2_evolve_apply error %d", status);
