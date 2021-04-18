@@ -47,6 +47,10 @@ all: $(target) $(DLL_DEPS)
 run: $(target) 
 	$(target)
 
+plot: $(target)
+	$(target) >result.txt
+	gnuplot draw.gp
+
 $(OBJECT_DIR)/%.o: %.c | $(OBJECT_DIR)
 	gcc -c $< -I/usr/include -Wall -Wpedantic $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -o $@
 

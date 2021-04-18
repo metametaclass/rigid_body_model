@@ -17,9 +17,32 @@ static int rbm_func(double t, const double y[], double f[],
     return GSL_SUCCESS;
 }
 
+static int rbm_jac(double t, const double y[], double *dfdy,
+                   double dfdt[], void *params) {
+    (void)(t); /* avoid unused parameter warning */
+    (void)(params);
+    gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
+    gsl_matrix *m = &dfdy_mat.matrix;
+
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            gsl_matrix_set(m, i, j, 0.0);
+        }
+    }
+
+    gsl_matrix_set(m, 0, 2, 1.0);  //dvx/dvx
+    gsl_matrix_set(m, 1, 3, 1.0);  //dvy/dvy
+
+    dfdt[0] = 0.0;
+    dfdt[1] = 0.0;
+    dfdt[2] = 0.0;
+    dfdt[3] = 0.0;
+    return GSL_SUCCESS;
+}
+
 int rigid_body_motion_driver() {
     double weight = 1;
-    gsl_odeiv2_system sys = {rbm_func, NULL, 4, &weight};
+    gsl_odeiv2_system sys = {rbm_func, rbm_jac, 4, &weight};
     //x,y
     //vx,vy
 
@@ -62,11 +85,11 @@ int rigid_body_motion_low_level() {
     gsl_odeiv2_evolve *e = gsl_odeiv2_evolve_alloc(4);
 
     double weight = 1;
-    gsl_odeiv2_system sys = {rbm_func, NULL, 4, &weight};
+    gsl_odeiv2_system sys = {rbm_func, rbm_jac, 4, &weight};
     //x,y
     //vx,vy
 
-    double h = 1e-1;
+    double h = 1e-3;
 
     int rc = 0;
 
@@ -77,16 +100,20 @@ int rigid_body_motion_low_level() {
     while (t < t1 && y[1] >= -0.001) {
         printf("%.5e %.5e %.5e %.5e %.5e\n", t, y[0], y[1], y[2], y[3]);
 
-        int status = gsl_odeiv2_evolve_apply_fixed_step(e, c, s,
-                                                        &sys,
-                                                        &t,  //t1,
-                                                        h, y);
-        //printf("%.5f\n", h);
+        // int status = gsl_odeiv2_evolve_apply_fixed_step(e, c, s,
+        //                                                 &sys,
+        //                                                 &t,  //t1,
+        //                                                 h, y);
+
+        int status = gsl_odeiv2_evolve_apply(e, c, s, &sys, &t, t1, &h, y);
+
         if (status != GSL_SUCCESS) {
             WMQ_LOG_ERROR("gsl_odeiv2_evolve_apply error %d", status);
             rc = WMQE_EXTERNAL_ERROR;
             break;
         }
+        fprintf(stderr, "%.5f err: %.5f %.5f %.5f %.5f\n", t, e->yerr[0], e->yerr[1], e->yerr[2], e->yerr[3]);
+        //printf("%.5f\n", h);
     }
 
     printf("%.5e %.5e %.5e %.5e %.5e\n", t, y[0], y[1], y[2], y[3]);

@@ -17,8 +17,8 @@ int main(void) {
     //rc = van_der_pol_example_low_level();
     //WMQ_CHECK_ERROR_AND_RETURN_RESULT(rc, "van_der_pol_example_low_level");
 
-    //rc = rigid_body_motion_driver();
-    rc = rigid_body_motion_low_level();
+    rc = rigid_body_motion_driver();
+    //rc = rigid_body_motion_low_level();
     WMQ_CHECK_ERROR_AND_RETURN_RESULT(rc, "rigid_body_motion_low_level");
     return rc;
 }

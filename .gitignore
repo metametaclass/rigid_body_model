@@ -2,5 +2,7 @@
 *.exe
 *.o
 *.dll
+*.png
 .vscode
 build_*
+result.txt
