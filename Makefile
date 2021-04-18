@@ -47,11 +47,13 @@ all: $(target) $(DLL_DEPS)
 run: $(target) 
 	$(target)
 
-$(OBJECT_DIR)/%.o: %.c 
+$(OBJECT_DIR):
 	mkdir -p $(OBJECT_DIR)
+
+$(OBJECT_DIR)/%.o: %.c $(OBJECT_DIR)
 	gcc -c $< -I/usr/include -Wall -Wpedantic $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -o $@
 
-SRC := rigid.c 
+SRC := rigid.c van_der_pol_example.c wmq_debug.c wmq_error.c
 #wmq_error.c wmq_debug.c 
 
 TARGET_OBJS     = $(addsuffix .o,$(addprefix $(OBJECT_DIR)/,$(basename $(SRC))))
