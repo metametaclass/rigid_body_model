@@ -49,7 +49,7 @@ run: $(target)
 
 plot: $(target)
 	$(target) >result.txt
-	gnuplot draw.gp
+	gnuplot draw.plt
 
 $(OBJECT_DIR)/%.o: %.c | $(OBJECT_DIR)
 	gcc -c $< -I/usr/include -Wall -Wpedantic $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -o $@
