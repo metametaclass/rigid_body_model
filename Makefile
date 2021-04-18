@@ -34,11 +34,17 @@ endif
 
 OBJECT_DIR = build_$(detected_OS)
 
-all: $(target)	
+DLL_DEPS :=
+ifeq ($(detected_OS), Windows)
+	DLL_DEPS += $(OBJECT_DIR)/libgsl-25.dll $(OBJECT_DIR)/libgslcblas-0.dll
+endif
+
+all: $(target) $(DLL_DEPS)	
 	@echo $(target)
 	@echo $(detected_OS)
+	@echo $(DLL_DEPS)
 
-run: $(target) $(DLL_DEPS)
+run: $(target) 
 	$(target)
 
 $(OBJECT_DIR)/%.o: %.c 
@@ -50,13 +56,11 @@ SRC := rigid.c
 
 TARGET_OBJS     = $(addsuffix .o,$(addprefix $(OBJECT_DIR)/,$(basename $(SRC))))
 
-DLL_DEPS :=
-ifeq ($(detected_OS), Windows)
-	DLL_DEPS += $(OBJECT_DIR)/libgsl-25.dll
-endif
-
 $(OBJECT_DIR)/libgsl-25.dll:
 	cp /mingw64/bin/libgsl-25.dll $(OBJECT_DIR)/
+
+$(OBJECT_DIR)/libgslcblas-0.dll:
+	cp /mingw64/bin/libgslcblas-0.dll $(OBJECT_DIR)/
 
 $(target): $(TARGET_OBJS) 
 	gcc $^ -L/usr/lib $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -lgsl -lgslcblas $(LINKER_DEBUG) -o $@ 
