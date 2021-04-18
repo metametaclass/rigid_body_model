@@ -34,12 +34,12 @@ endif
 
 OBJECT_DIR = build_$(detected_OS)
 
-run: $(target)
-	$(target)
-
 all: $(target)	
 	@echo $(target)
 	@echo $(detected_OS)
+
+run: $(target) $(DLL_DEPS)
+	$(target)
 
 $(OBJECT_DIR)/%.o: %.c 
 	mkdir -p $(OBJECT_DIR)
@@ -58,8 +58,8 @@ endif
 $(OBJECT_DIR)/libgsl-25.dll:
 	cp /mingw64/bin/libgsl-25.dll $(OBJECT_DIR)/
 
-$(target): $(TARGET_OBJS) $(DLL_DEPS)
-	gcc $^ -L/usr/lib $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -lgsl $(LINKER_DEBUG) -o $@ 
+$(target): $(TARGET_OBJS) 
+	gcc $^ -L/usr/lib $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -lgsl -lgslcblas $(LINKER_DEBUG) -o $@ 
 
 clean:
 	rm -f $(APP) *.elf *.exe *.o 
