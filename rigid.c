@@ -27,8 +27,9 @@ int jac(double t, const double y[], double *dfdy,
     return GSL_SUCCESS;
 }
 
-int main(int argc, char **argv) {
+int main1(int argc, char **argv) {
     const gsl_odeiv2_step_type *T = gsl_odeiv2_step_rk8pd;
+    //const gsl_odeiv2_step_type *T = gsl_odeiv2_step_rkf45;
 
     gsl_odeiv2_step *s = gsl_odeiv2_step_alloc(T, 2);
     gsl_odeiv2_control *c = gsl_odeiv2_control_y_new(1e-6, 0.0);
@@ -56,5 +57,32 @@ int main(int argc, char **argv) {
     gsl_odeiv2_evolve_free(e);
     gsl_odeiv2_control_free(c);
     gsl_odeiv2_step_free(s);
+    return 0;
+}
+
+int main(void) {
+    double mu = 10;
+    gsl_odeiv2_system sys = {func, jac, 2, &mu};
+
+    gsl_odeiv2_driver *d =
+        gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_rk8pd,
+                                      1e-6, 1e-6, 0.0);
+    int i;
+    double t = 0.0, t1 = 100.0;
+    double y[2] = {1.0, 0.0};
+
+    for (i = 1; i <= 100; i++) {
+        double ti = i * t1 / 100.0;
+        int status = gsl_odeiv2_driver_apply(d, &t, ti, y);
+
+        if (status != GSL_SUCCESS) {
+            printf("error, return value=%d\n", status);
+            break;
+        }
+
+        printf("%.5e %.5e %.5e\n", t, y[0], y[1]);
+    }
+
+    gsl_odeiv2_driver_free(d);
     return 0;
 }
