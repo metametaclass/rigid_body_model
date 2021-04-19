@@ -3,8 +3,7 @@
 #include <gsl/gsl_odeiv2.h>
 
 #include "wmq_error.h"
-
-#define G_ACCEL 9.81
+#include "phys_constants.h"
 
 static int free_fall_func(double t, const double y[], double f[],
                           void *params)
