@@ -2,6 +2,7 @@
 
 #include "pendulum.h"
 #include "free_fall.h"
+#include "rigid_body_motion.h"
 #include "van_der_pol_example.h"
 #include "wmq_debug.h"
 #include "wmq_error.h"
@@ -20,11 +21,10 @@ int main(void)
     //WMQ_CHECK_ERROR_AND_RETURN_RESULT(rc, "van_der_pol_example_low_level");
 
     //rc = rigid_body_motion_driver();
-    //rc = rigid_body_motion_low_level();
-    //WMQ_CHECK_ERROR_AND_RETURN_RESULT(rc, "rigid_body_motion_low_level");
-
     //rc = pendulum_low_level();
-    rc = free_fall_low_level();
-    WMQ_CHECK_ERROR_AND_RETURN_RESULT(rc, "pendulum_low_level");
+    //rc = free_fall_low_level();
+
+    rc = rigid_body_motion_low_level();
+    WMQ_CHECK_ERROR_AND_RETURN_RESULT(rc, "rigid_body_motion_low_level");
     return rc;
 }
