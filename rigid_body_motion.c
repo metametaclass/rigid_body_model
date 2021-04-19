@@ -155,7 +155,9 @@ int rigid_body_motion_low_level()
     //velocity = 1,0,-10
     //TODO: find initial angular moment from inertia tensor ang angular speed
     // L = I*w (w=0,1,0; rotation about y axis)
-    double y[RBM_DIMENSION] = {/*x,y,z*/ 0.0, 0.0, 0.0, /*q.w,q.x,q.y,q.z*/ 1.0, 0.0, 0.0, 0.0, /*vx,vy,vz*/ 1.0, 0.0, -10.0, /*Lx,Ly,Lz*/ 0.0, 0.5, 0.5};
+    double y[RBM_DIMENSION] = {/*x,y,z*/ 0.0, 0.0, 0.0, /*q.w,q.x,q.y,q.z*/ 1.0, 0.0, 0.0, 0.0, /*vx,vy,vz*/ 1.0, 0.0, -10.0, /*Lx,Ly,Lz*/ 1.0, 0.0, 0.0};
+
+    double prev_t = t;
 
     while (t < t1)
     {
@@ -174,6 +176,18 @@ int rigid_body_motion_low_level()
             rc = WMQE_EXTERNAL_ERROR;
             break;
         }
+
+        //small perturbation for https://en.wikipedia.org/wiki/Tennis_racket_theorem
+        if (t > 10.0 && prev_t <= 10.0)
+        {
+            y[11] = y[11] + 0.001;
+        }
+        else
+        {
+            y[11] = 0.0;
+        }
+
+        prev_t = t;
         //fprintf(stderr, "%.5f step:%.5f err: %.5f %.5f %.5f %.5f\n", t, h, e->yerr[0], e->yerr[1], e->yerr[2], e->yerr[3]);
     }
 
