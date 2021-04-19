@@ -6,33 +6,37 @@
 
 #define G_ACCEL 9.81
 
-static int rbm_func(double t, const double y[], double f[],
-                    void *params) {
+static int free_fall_func(double t, const double y[], double f[],
+                          void *params)
+{
     (void)(t); /* avoid unused parameter warning */
     //double weight = *(double *)params;
-    f[0] = y[2];      //dx/dt = vx
-    f[1] = y[3];      //dy/dt = vy
-    f[2] = 0;         //dvx/dt = 0
-    f[3] = -G_ACCEL;  //dvy/dt = -g
+    f[0] = y[2];     //dx/dt = vx
+    f[1] = y[3];     //dy/dt = vy
+    f[2] = 0;        //dvx/dt = 0
+    f[3] = -G_ACCEL; //dvy/dt = -g
     //f[3] = -(y[1] * 100);  //dvy/dt = -w*y
     return GSL_SUCCESS;
 }
 
-static int rbm_jac(double t, const double y[], double *dfdy,
-                   double dfdt[], void *params) {
+static int free_fall_jac(double t, const double y[], double *dfdy,
+                         double dfdt[], void *params)
+{
     (void)(t); /* avoid unused parameter warning */
     (void)(params);
     gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
     gsl_matrix *m = &dfdy_mat.matrix;
 
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
             gsl_matrix_set(m, i, j, 0.0);
         }
     }
 
-    gsl_matrix_set(m, 0, 2, 1.0);  //dvx/dvx
-    gsl_matrix_set(m, 1, 3, 1.0);  //dvy/dvy
+    gsl_matrix_set(m, 0, 2, 1.0); //dvx/dvx
+    gsl_matrix_set(m, 1, 3, 1.0); //dvy/dvy
 
     dfdt[0] = 0.0;
     dfdt[1] = 0.0;
@@ -41,9 +45,10 @@ static int rbm_jac(double t, const double y[], double *dfdy,
     return GSL_SUCCESS;
 }
 
-int rigid_body_motion_driver() {
+int free_fall_driver()
+{
     double weight = 1;
-    gsl_odeiv2_system sys = {rbm_func, rbm_jac, 4, &weight};
+    gsl_odeiv2_system sys = {free_fall_func, free_fall_jac, 4, &weight};
     //x,y
     //vx,vy
 
@@ -55,18 +60,21 @@ int rigid_body_motion_driver() {
     double y[4] = {0.0, 0.0, 10.0 * 0.707, 10.0 * 0.707};
     //double y[4] = {0.0, 0.0, 0, 10.0};
 
-    for (i = 1; i <= N; i++) {
+    for (i = 1; i <= N; i++)
+    {
         printf("%.5e %.5e %.5e %.5e %.5e\n", t, y[0], y[1], y[2], y[3]);
 
         double ti = i * t1 / N;
         int status = gsl_odeiv2_driver_apply(d, &t, ti, y);
 
-        if (status != GSL_SUCCESS) {
+        if (status != GSL_SUCCESS)
+        {
             WMQ_LOG_ERROR("gsl_odeiv2_evolve_apply error %d", status);
             rc = WMQE_EXTERNAL_ERROR;
             break;
         }
-        if (y[1] < 0) {
+        if (y[1] < 0)
+        {
             //below initial level
             break;
         }
@@ -77,7 +85,8 @@ int rigid_body_motion_driver() {
     return rc;
 }
 
-int rigid_body_motion_low_level() {
+int free_fall_low_level()
+{
     //const gsl_odeiv2_step_type *T = gsl_odeiv2_step_rk8pd;
     const gsl_odeiv2_step_type *T = gsl_odeiv2_step_rkf45;
 
@@ -86,7 +95,7 @@ int rigid_body_motion_low_level() {
     gsl_odeiv2_evolve *e = gsl_odeiv2_evolve_alloc(4);
 
     double weight = 1;
-    gsl_odeiv2_system sys = {rbm_func, rbm_jac, 4, &weight};
+    gsl_odeiv2_system sys = {free_fall_func, free_fall_jac, 4, &weight};
     //x,y
     //vx,vy
 
@@ -97,17 +106,20 @@ int rigid_body_motion_low_level() {
     double t = 0.0, t1 = 10.0;
     double y[4] = {0.0, 0.0, 10.0 * 0.707, 10.0 * 0.707};
 
-    while (t < t1 && y[1] >= -0.001) {
+    while (t < t1 && y[1] >= -0.001)
+    {
         printf("%.5e %.5e %.5e %.5e %.5e\n", t, y[0], y[1], y[2], y[3]);
 
         int status = gsl_odeiv2_evolve_apply(e, c, s, &sys, &t, t1, &h, y);
 
         //ode solver has exact solution for differential equations with constant second derivative with any step, so step size has unbound growth
-        if (h > 0.1) {
+        if (h > 0.1)
+        {
             h = 0.1;
         }
 
-        if (status != GSL_SUCCESS) {
+        if (status != GSL_SUCCESS)
+        {
             WMQ_LOG_ERROR("gsl_odeiv2_evolve_apply error %d", status);
             rc = WMQE_EXTERNAL_ERROR;
             break;
