@@ -14,6 +14,7 @@ static int rbm_func(double t, const double y[], double f[],
     f[1] = y[3];      //dy/dt = vy
     f[2] = 0;         //dvx/dt = 0
     f[3] = -G_ACCEL;  //dvy/dt = -g
+    //f[3] = -(y[1] * 100);  //dvy/dt = -w*y
     return GSL_SUCCESS;
 }
 
@@ -95,25 +96,23 @@ int rigid_body_motion_low_level() {
 
     double t = 0.0, t1 = 10.0;
     double y[4] = {0.0, 0.0, 10.0 * 0.707, 10.0 * 0.707};
-    //double y[4] = {0.0, 0.0, 0.0, 100.0};
 
     while (t < t1 && y[1] >= -0.001) {
         printf("%.5e %.5e %.5e %.5e %.5e\n", t, y[0], y[1], y[2], y[3]);
 
-        // int status = gsl_odeiv2_evolve_apply_fixed_step(e, c, s,
-        //                                                 &sys,
-        //                                                 &t,  //t1,
-        //                                                 h, y);
-
         int status = gsl_odeiv2_evolve_apply(e, c, s, &sys, &t, t1, &h, y);
+
+        //ode solver has exact solution for differential equations with constant second derivative with any step, so step size has unbound growth
+        if (h > 0.1) {
+            h = 0.1;
+        }
 
         if (status != GSL_SUCCESS) {
             WMQ_LOG_ERROR("gsl_odeiv2_evolve_apply error %d", status);
             rc = WMQE_EXTERNAL_ERROR;
             break;
         }
-        fprintf(stderr, "%.5f err: %.5f %.5f %.5f %.5f\n", t, e->yerr[0], e->yerr[1], e->yerr[2], e->yerr[3]);
-        //printf("%.5f\n", h);
+        fprintf(stderr, "%.5f step:%.5f err: %.5f %.5f %.5f %.5f\n", t, h, e->yerr[0], e->yerr[1], e->yerr[2], e->yerr[3]);
     }
 
     printf("%.5e %.5e %.5e %.5e %.5e\n", t, y[0], y[1], y[2], y[3]);
