@@ -17,3 +17,10 @@ plot 'result.txt' using 2:3 w lp title 'y1/y2'
 set output 'state_2.png'
 
 plot 'result.txt' using 4:5 w lp title 'y3/y4'
+
+set output 'quaternion.png'
+
+plot 'result.txt' using 1:5 w lp title 'q.w', \
+     '' using 1:6 w lp title 'q.x', \
+     '' using 1:7 w lp title 'q.y', \
+     '' using 1:8 w lp title 'q.z'

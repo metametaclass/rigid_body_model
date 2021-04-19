@@ -16,4 +16,7 @@ plot 'result.txt' using 2:4 w lp title 'y1/y3'
 set terminal wxt 5
 plot 'result.txt' using 3:5 w lp title 'y2/y4'
 
+set terminal wxt 6
+plot 'result.txt' using 1:5 w lp title 'q.w','' using 1:6 w lp title 'q.x', '' using 1:7 w lp title 'q.y', '' using 1:8 w lp title 'q.z'
+
 pause mouse close
