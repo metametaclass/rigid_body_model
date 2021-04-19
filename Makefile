@@ -57,8 +57,7 @@ $(OBJECT_DIR)/%.o: %.c | $(OBJECT_DIR)
 $(OBJECT_DIR):
 	mkdir -p $@
 
-SRC := rigid.c van_der_pol_example.c rigid_body_motion.c wmq_debug.c wmq_error.c
-#wmq_error.c wmq_debug.c 
+SRC := rigid.c van_der_pol_example.c rigid_body_motion.c pendulum.c wmq_debug.c wmq_error.c
 
 TARGET_OBJS     = $(addsuffix .o,$(addprefix $(OBJECT_DIR)/,$(basename $(SRC))))
 
