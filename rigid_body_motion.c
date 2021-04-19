@@ -89,6 +89,14 @@ int rbm_func(double t, const double y[], double f[],
     f[11] = 0;
     f[12] = 0;
 
+    //double r = (rand() / (0.5 * RAND_MAX)) - 1.0;
+    double r = rand() * 1.0 / RAND_MAX;
+
+    if (r < 0.001)
+    {
+        f[12] = 0.01;
+    }
+
     return GSL_SUCCESS;
 }
 
@@ -157,7 +165,7 @@ int rigid_body_motion_low_level()
     // L = I*w (w=0,1,0; rotation about y axis)
     double y[RBM_DIMENSION] = {/*x,y,z*/ 0.0, 0.0, 0.0, /*q.w,q.x,q.y,q.z*/ 1.0, 0.0, 0.0, 0.0, /*vx,vy,vz*/ 1.0, 0.0, -10.0, /*Lx,Ly,Lz*/ 1.0, 0.0, 0.0};
 
-    double prev_t = t;
+    //double prev_t = t;
 
     while (t < t1)
     {
@@ -178,16 +186,16 @@ int rigid_body_motion_low_level()
         }
 
         //small perturbation for https://en.wikipedia.org/wiki/Tennis_racket_theorem
-        if (t > 10.0 && prev_t <= 10.0)
+        /*if (t > 10.0 && prev_t <= 10.0)
         {
             y[11] = y[11] + 0.001;
         }
         else
         {
             y[11] = 0.0;
-        }
+        }*/
 
-        prev_t = t;
+        //prev_t = t;
         //fprintf(stderr, "%.5f step:%.5f err: %.5f %.5f %.5f %.5f\n", t, h, e->yerr[0], e->yerr[1], e->yerr[2], e->yerr[3]);
     }
 
