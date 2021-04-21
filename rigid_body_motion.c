@@ -82,7 +82,8 @@ int rbm_func(double t, const double y[], double f[],
 
     f[7] = 0;
     f[8] = 0;
-    f[9] = G_ACCEL; // z - down axis
+    //f[9] = G_ACCEL; // z - down axis
+    f[9] = 0; // z - down axis
 
     //no torques, no changes in angular moment
     f[10] = 0;
@@ -92,9 +93,9 @@ int rbm_func(double t, const double y[], double f[],
     //double r = (rand() / (0.5 * RAND_MAX)) - 1.0;
     double r = rand() * 1.0 / RAND_MAX;
 
-    if (r < 0.001)
+    if (r < 0.01)
     {
-        f[12] = 0.01;
+        f[12] = 0.1;
     }
 
     return GSL_SUCCESS;
@@ -156,14 +157,14 @@ int rigid_body_motion_low_level()
 
     int rc = 0;
 
-    double t = 0.0, t1 = 100.0;
+    double t = 0.0, t1 = 30.0;
 
     //x,y,z=0
     //w,x,y,z = 1,0,0,0 //unit quaternion, no rotation cos(a/2), v*sin(a/2)
     //velocity = 1,0,-10
     //TODO: find initial angular moment from inertia tensor ang angular speed
     // L = I*w (w=0,1,0; rotation about y axis)
-    double y[RBM_DIMENSION] = {/*x,y,z*/ 0.0, 0.0, 0.0, /*q.w,q.x,q.y,q.z*/ 1.0, 0.0, 0.0, 0.0, /*vx,vy,vz*/ 1.0, 0.0, -10.0, /*Lx,Ly,Lz*/ 1.0, 0.0, 0.0};
+    double y[RBM_DIMENSION] = {/*x,y,z*/ 0.0, 0.0, 0.0, /*q.w,q.x,q.y,q.z*/ 1.0, 0.0, 0.0, 0.0, /*vx,vy,vz*/ 0.1, 0.0, 0.0, /*Lx,Ly,Lz*/ 3.0, 0.0, 0.0};
 
     //double prev_t = t;
 

@@ -51,6 +51,14 @@ plot: $(target)
 	$(target) >result.txt
 	gnuplot draw.plt
 
+animation: animations.json
+
+result.txt: $(target)
+	$(target) >result.txt
+
+animations.json: result.txt | $(target) 
+	python convert_to_animation.py $< > $@
+
 $(OBJECT_DIR)/%.o: %.c | $(OBJECT_DIR)
 	gcc -c $< -I/usr/include -Wall -Wpedantic $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -o $@
 
