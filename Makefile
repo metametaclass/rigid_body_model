@@ -57,7 +57,7 @@ result.txt: $(target)
 	$(target) >result.txt
 
 animations.json: result.txt | $(target) 
-	python convert_to_animation.py $< > $@
+	python3 convert_to_animation.py $< > $@
 
 $(OBJECT_DIR)/%.o: %.c | $(OBJECT_DIR)
 	gcc -c $< -I/usr/include -Wall -Wpedantic $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -o $@
@@ -65,7 +65,7 @@ $(OBJECT_DIR)/%.o: %.c | $(OBJECT_DIR)
 $(OBJECT_DIR):
 	mkdir -p $@
 
-SRC := rigid.c van_der_pol_example.c rigid_body_motion.c free_fall.c pendulum.c wmq_debug.c wmq_error.c
+SRC := rigid.c van_der_pol_example.c rigid_body_motion.c free_fall.c pendulum.c wmq_debug.c wmq_error.c inverse_matrix.c gsl_utils.c
 
 TARGET_OBJS     = $(addsuffix .o,$(addprefix $(OBJECT_DIR)/,$(basename $(SRC))))
 
@@ -76,7 +76,7 @@ $(OBJECT_DIR)/libgslcblas-0.dll:
 	cp /mingw64/bin/libgslcblas-0.dll $(OBJECT_DIR)/
 
 $(target): $(TARGET_OBJS) 
-	gcc $^ -L/usr/lib $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -lgsl -lgslcblas -lm $(LINKER_DEBUG) -o $@
+	gcc $^ -L/usr/lib $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -lgsl -lgslcblas -llapack -lm $(LINKER_DEBUG) -o $@
 
 clean:
 	rm -f $(APP) *.elf *.exe *.o 

@@ -5,6 +5,8 @@
 #include "wmq_error.h"
 
 int inverse_matrix(double m[], int size) {
+    //https://stackoverflow.com/questions/3519959/computing-the-inverse-of-a-matrix-using-lapack-in-c
+
     int pivot[size];
     int err;
     dgetrf_(&size, &size, m, &size, pivot, &err);

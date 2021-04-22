@@ -1,12 +1,13 @@
+#include <gsl/gsl_blas.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
-#include <gsl/gsl_blas.h>
 
-#include "wmq_error.h"
-
+#include "gsl_utils.h"
+#include "inverse_matrix.h"
 #include "phys_constants.h"
 #include "quaternion.h"
+#include "wmq_error.h"
 // In the "xyz (pitch-roll-yaw) convention," theta is pitch, psi is roll, and phi is yaw.
 
 //https://www.cs.cmu.edu/~baraff/pbm/rigid1.pdf
@@ -19,16 +20,15 @@
 #define RBM_DIMENSION 13
 
 int rbm_func(double t, const double y[], double f[],
-             void *params)
-{
+             void *params) {
     (void)(t); /* avoid unused parameter warning */
 
     //inverted inertia tensor in body coordinates
     gsl_matrix_view Ibody_inv_view = gsl_matrix_view_array((double *)params, 3, 3);
 
-    f[0] = y[7]; //dx/dt = vx
-    f[1] = y[8]; //dy/dt = vy
-    f[2] = y[9]; //dz/dt = vz
+    f[0] = y[7];  //dx/dt = vx
+    f[1] = y[8];  //dy/dt = vy
+    f[2] = y[9];  //dz/dt = vz
 
     //TODO: check structure alignment?
     //q = y[3..6]
@@ -36,36 +36,33 @@ int rbm_func(double t, const double y[], double f[],
 
     //R = quaternion_to_matrix(normalize(q))
     quaternion q_norm = quaternion_normalized(*q);
-    double R[9]; //rotation matrix in row-major order
+    double R[9];  //rotation matrix in row-major order
     quaternion_to_rotation_matrix(q_norm, R);
     gsl_matrix_view R_view = gsl_matrix_view_array(R, 3, 3);
 
     //Iinv = R * Ibodyinv * Transpose(R);
-    double Iinv_1[9] = {0.0}; //0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    double Iinv_1[9] = {0.0};  //0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
     gsl_matrix_view Iinv_view_1 = gsl_matrix_view_array(Iinv_1, 3, 3);
     int rc = gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &R_view.matrix, &Ibody_inv_view.matrix, 0.0, &Iinv_view_1.matrix);
-    if (rc != 0)
-    {
+    if (rc != 0) {
         WMQ_LOG_ERROR("gsl_blas_dgemm: step 1 %d", rc);
         return rc;
     }
-    double Iinv_2[9] = {0.0}; //0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    double Iinv_2[9] = {0.0};  //0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
     gsl_matrix_view Iinv_view_2 = gsl_matrix_view_array(Iinv_2, 3, 3);
     rc = gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, &Iinv_view_1.matrix, &R_view.matrix, 0.0, &Iinv_view_2.matrix);
-    if (rc != 0)
-    {
+    if (rc != 0) {
         WMQ_LOG_ERROR("gsl_blas_dgemm: step 2 %d", rc);
         return rc;
     }
 
     //L = y[10..12]
     _gsl_vector_const_view angular_moment = gsl_vector_const_view_array(&y[10], 3);
-    double angular_velocity[4] = {0.0}; //0.0, 0.0, 0.0, 0.0
+    double angular_velocity[4] = {0.0};  //0.0, 0.0, 0.0, 0.0
     gsl_vector_view angular_velocity_view = gsl_vector_view_array(&angular_velocity[1], 3);
     //omega = Iinv * L (y[10..12])
     rc = gsl_blas_dgemv(CblasNoTrans, 1.0, &Iinv_view_2.matrix, &angular_moment.vector, 0.0, &angular_velocity_view.vector);
-    if (rc != 0)
-    {
+    if (rc != 0) {
         WMQ_LOG_ERROR("gsl_blas_dgemv: step 2 %d", rc);
         return rc;
     }
@@ -83,7 +80,7 @@ int rbm_func(double t, const double y[], double f[],
     f[7] = 0;
     f[8] = 0;
     //f[9] = G_ACCEL; // z - down axis
-    f[9] = 0; // z - down axis
+    f[9] = 0;  // z - down axis
 
     //no torques, no changes in angular moment
     f[10] = 0;
@@ -93,26 +90,22 @@ int rbm_func(double t, const double y[], double f[],
     //double r = (rand() / (0.5 * RAND_MAX)) - 1.0;
     double r = rand() * 1.0 / RAND_MAX;
 
-    if (r < 0.01)
-    {
+    if (r < 0.01) {
         f[12] = 0.1;
     }
 
     return GSL_SUCCESS;
 }
 
-void dump_state(double t, double y_state[])
-{
+void dump_state(double t, double y_state[]) {
     printf("%.5e", t);
-    for (int i = 0; i < RBM_DIMENSION; i++)
-    {
+    for (int i = 0; i < RBM_DIMENSION; i++) {
         printf(" %.5e", y_state[i]);
     }
     printf("\n");
 }
 
-int rigid_body_motion_low_level()
-{
+int rigid_body_motion_low_level() {
     const gsl_odeiv2_step_type *T = gsl_odeiv2_step_rk8pd;
     //const gsl_odeiv2_step_type *T = gsl_odeiv2_step_rkf45;
 
@@ -135,8 +128,19 @@ int rigid_body_motion_low_level()
         2.0,
     };
 
-    //TODO:inverse matrix
-    //https://stackoverflow.com/questions/3519959/computing-the-inverse-of-a-matrix-using-lapack-in-c
+    double inertia_tensor_body_inverted[9] = {0};
+    for (int i = 0; i < 9; i++) {
+        inertia_tensor_body_inverted[i] = inertia_tensor_body[i];
+    }
+
+    int rc = inverse_matrix(inertia_tensor_body_inverted, 3);
+    WMQ_CHECK_ERROR_AND_RETURN_RESULT(rc, "inverse_matrix");
+
+    gsl_matrix_view I_inv_view = gsl_matrix_view_array(inertia_tensor_body_inverted, 3, 3);
+
+    //gsl_matrix_print(&I_inv_view.matrix);
+
+    /*
     double inertia_tensor_body_inverted[9] = {
         1.0,
         0.0,
@@ -149,13 +153,13 @@ int rigid_body_motion_low_level()
         0.0,
         0.0,
         0.5,
-    };
+    };*/
 
     gsl_odeiv2_system sys = {rbm_func, NULL, RBM_DIMENSION, &inertia_tensor_body_inverted};
 
     double h = 1e-3;
 
-    int rc = 0;
+    rc = 0;
 
     double t = 0.0, t1 = 30.0;
 
@@ -168,19 +172,16 @@ int rigid_body_motion_low_level()
 
     //double prev_t = t;
 
-    while (t < t1)
-    {
+    while (t < t1) {
         dump_state(t, y);
 
         int status = gsl_odeiv2_evolve_apply(e, c, s, &sys, &t, t1, &h, y);
 
-        if (h > 0.1)
-        {
+        if (h > 0.1) {
             h = 0.1;
         }
 
-        if (status != GSL_SUCCESS)
-        {
+        if (status != GSL_SUCCESS) {
             WMQ_LOG_ERROR("gsl_odeiv2_evolve_apply error %d", status);
             rc = WMQE_EXTERNAL_ERROR;
             break;
