@@ -56,7 +56,7 @@ animation: animations.json
 result.txt: $(target)
 	$(target) >result.txt
 
-animations.json: result.txt | $(target) 
+animations.json: result.txt | convert_to_animation.py  $(target)
 	python3 convert_to_animation.py $< > $@
 
 $(OBJECT_DIR)/%.o: %.c | $(OBJECT_DIR)
