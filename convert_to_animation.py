@@ -21,19 +21,29 @@ with open(sys.argv[1], encoding='utf-8') as fh:
      Yned = float(record[2])
      Zned = float(record[3])
 
+     #position_track.append(Yned)
+     #position_track.append(-Zned)
+     #position_track.append(-Xned)
+
+     position_track.append(Xned)
      position_track.append(Yned)
-     position_track.append(-Zned)
-     position_track.append(-Xned)
+     position_track.append(Zned)
 
      QW = float(record[4])
      QX = float(record[5])
      QY = float(record[6])
      QZ = float(record[7])
 
+     #rotation_track.append(QY)
+     #rotation_track.append(-QZ)
+     #rotation_track.append(-QX)
+     #rotation_track.append(QW)
+
+     rotation_track.append(QX)
      rotation_track.append(QY)
-     rotation_track.append(-QZ)
-     rotation_track.append(-QX)
+     rotation_track.append(QZ)
      rotation_track.append(QW)
+
 
 
    result=[{
